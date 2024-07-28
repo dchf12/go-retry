@@ -3,18 +3,14 @@ package retry
 import (
 	"errors"
 	"testing"
-	"time"
 )
 
 func TestRetry(t *testing.T) {
+	t.Parallel()
 	retryFunc := func() error {
 		return errors.New("failure")
 	}
-	opts := Options{
-		MaxRetries: 3,
-		Delay:      1 * time.Second,
-	}
-	err := Retry(retryFunc, opts)
+	err := Retry(retryFunc, WithDelay(2), WithMaxRetries(2))
 	if err == nil {
 		t.Error("expected an error")
 	}

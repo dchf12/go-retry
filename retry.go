@@ -1,7 +1,6 @@
 package retry
 
 import (
-	"errors"
 	"time"
 )
 
@@ -12,7 +11,28 @@ type Options struct {
 	Delay      time.Duration
 }
 
-func Retry(fn RetryableFunc, opts Options) error {
+type Option func(*Options)
+
+func WithMaxRetries(maxRetries int) Option {
+	return func(opts *Options) {
+		opts.MaxRetries = maxRetries
+	}
+}
+
+func WithDelay(delay time.Duration) Option {
+	return func(opts *Options) {
+		opts.Delay = delay
+	}
+}
+
+func Retry(fn RetryableFunc, options ...Option) error {
+	opts := Options{
+		MaxRetries: 3,
+		Delay:      1 * time.Second,
+	}
+	for _, opt := range options {
+		opt(&opts)
+	}
 	var err error
 	for range opts.MaxRetries {
 		err = fn()
@@ -21,5 +41,5 @@ func Retry(fn RetryableFunc, opts Options) error {
 		}
 		time.Sleep(opts.Delay)
 	}
-	return errors.New("all retries failed")
+	return err
 }
